@@ -5,4 +5,4 @@ unsetenv SESSION_MANAGER
 
 zombie xa
 
-screen sudo ./src/wwvb_observatory.py
+screen sh -c 'sudo env HOME="$HOME" ./src/wwvb_observatory.py'
