@@ -52,7 +52,7 @@ class DatedFile:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             self._file = open(filename, 'at', encoding='utf-8')
             if self._file.tell():
-                f.write('\n')
+                self._file.write('\n')
 
     def write(self, buf):
         return self._file.write(buf)
@@ -61,6 +61,17 @@ class DatedFile:
         return self._file.flush()
 
 def main():
+    GPIO.setmode(GPIO.BOARD)
+    PIN = 3
+    GPIO.setup([PIN], GPIO.IN)
+
+    if sudo_gid := os.environ.get('SUDO_GID'):
+        print(f"Setting GID to {sudo_gid}", file=sys.stderr)
+        os.setgid(int(os.environ['SUDO_GID']))
+    if sudo_uid := os.environ.get('SUDO_UID'):
+        print(f"Setting UID to {sudo_uid}", file=sys.stderr)
+        os.setuid(int(os.environ['SUDO_UID']))
+
     if ntp_adjtime()[0] == TIME_ERROR:
         print("Waiting for NTP sync", end="", file=sys.stderr)
         sys.stderr.flush()
@@ -69,14 +80,11 @@ def main():
             print(end=".", file=sys.stderr)
             sys.stderr.flush()
         print(file=sys.stderr)
+
     now = clock_gettime_ts(CLOCK_REALTIME)
     deadline = timespec(now.tv_sec + 1, 0)
     logfile = DatedFile(deadline.tv_sec, "data/%Y/%m-%d.txt")
     sys.stdout = Tee(sys.stdout, logfile)
-
-    GPIO.setmode(GPIO.BOARD)
-    PIN = 3
-    GPIO.setup([PIN], GPIO.IN)
 
     end = ""
     try:
@@ -89,7 +97,7 @@ def main():
                 end="\n"
                 g = time.gmtime(deadline.tv_sec)
                 print(end=f'{time.strftime("%Y-%m-%d %H:%M:%SZ ", g)}')
-
+                logfile.timestamp = deadline.tv_sec
             if i in [20, 50, 80]:
                 print(end="|")
             print(end="#" if st else "_")

@@ -58,32 +58,14 @@ class timespec(ctypes.Structure):
         ("tv_nsec", ctypes.c_long),
     ]
 
-class timex(ctypes.Structure):
+class timeunion(ctypes.Union):
     _fields_ = [
-        ("modes", ctypes.c_int),
-        ("offset", ctypes.c_long),
-        ("freq", ctypes.c_long),
-        ("maxerror", ctypes.c_long),
-        ("esterror", ctypes.c_long),
-        ("status", ctypes.c_int),
-        ("constant", ctypes.c_long),
-        ("precision", ctypes.c_long),
-        ("tolerance", ctypes.c_long),
         ("time", timeval),
-        ("tick", ctypes.c_long),
-        ("ppsfreq", ctypes.c_long),
-        ("jitter", ctypes.c_long),
-        ("shift", ctypes.c_int),
-        ("stabil", ctypes.c_long),
-        ("jitcnt", ctypes.c_long),
-        ("calcnt", ctypes.c_long),
-        ("errcnt", ctypes.c_long),
-        ("stbcnt", ctypes.c_long),
-        ("tai", ctypes.c_int),
+        ("time_ns", timespec),
+
     ]
-
-
-class timex_ns(ctypes.Structure):
+class timex(ctypes.Structure):
+    _anonymous_ = ('_',)
     _fields_ = [
         ("modes", ctypes.c_int),
         ("offset", ctypes.c_long),
@@ -94,7 +76,7 @@ class timex_ns(ctypes.Structure):
         ("constant", ctypes.c_long),
         ("precision", ctypes.c_long),
         ("tolerance", ctypes.c_long),
-        ("time", timespec),
+        ("_", timeunion),
         ("tick", ctypes.c_long),
         ("ppsfreq", ctypes.c_long),
         ("jitter", ctypes.c_long),
@@ -106,6 +88,7 @@ class timex_ns(ctypes.Structure):
         ("stbcnt", ctypes.c_long),
         ("tai", ctypes.c_int),
     ]
+
 
 libc = ctypes.CDLL("libc.so.6", use_errno=True)
 _clock_nanosleep = libc.clock_nanosleep
@@ -118,20 +101,7 @@ _ntp_adjtime.restype = int
 
 def ntp_adjtime(buf=None):
     buf = buf or timex()
-    buf.modes |= ADJ_MICRO
     r = _ntp_adjtime(buf)
-    if r < 0:
-        errno = ctypes.get_errno()
-        raise OSError(errno, os.strerror(errno))
-    return (r, buf)
-
-_ntp_adjtime_ns = libc["ntp_adjtime"]
-_ntp_adjtime_ns.argtypes = [ctypes.POINTER(timex_ns)]
-_ntp_adjtime_ns.restype = int
-def ntp_adjtime_ns(buf=None):
-    buf = buf or timex_ns()
-    r = _ntp_adjtime_ns(buf)
-    buf.modes |= ADJ_NANO
     if r < 0:
         errno = ctypes.get_errno()
         raise OSError(errno, os.strerror(errno))

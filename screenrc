@@ -1,0 +1,8 @@
+source ~/.screenrc
+
+unsetenv DISPLAY
+unsetenv SESSION_MANAGER
+
+zombie xa
+
+screen sudo ./src/wwvb_observatory.py
