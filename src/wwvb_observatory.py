@@ -15,6 +15,10 @@ from clock_nanosleep import (
         ntp_adjtime,
         )
 
+def sq(s):
+    """Safely shell-quote the argument"""
+    return "'" + s.replace("'", "'\\''") + "'"
+
 class Tee:
     def __init__(self, *sub_fds):
         self.sub_fds = sub_fds
@@ -47,6 +51,9 @@ class DatedFile:
     def timestamp(self, value):
         filename = time.strftime(self._format, time.gmtime(value))
         if filename != self._filename:
+            if self._filename is not None:
+                qf = sq(self._filename)
+                os.system(f"(git add {qf} && git commit -m'Add {qf}' {qf})&")
             self._filename = filename
             if self._file is not None:
                 self._file.close()
