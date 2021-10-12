@@ -6,6 +6,7 @@ import time
 import RPi.GPIO as GPIO
 from clock_nanosleep import (
         CLOCK_REALTIME,
+        CLOCK_TAI,
         TIMER_ABSTIME,
         TIME_ERROR,
         clock_gettime_ts,
@@ -81,7 +82,7 @@ def main():
             sys.stderr.flush()
         print(file=sys.stderr)
 
-    now = clock_gettime_ts(CLOCK_REALTIME)
+    now = clock_gettime_ts(CLOCK_TAI)
     deadline = timespec(now.tv_sec + 1, 0)
     logfile = DatedFile(deadline.tv_sec, "data/%Y/%m-%d.txt")
     sys.stdout = Tee(sys.stdout, logfile)
@@ -89,14 +90,14 @@ def main():
     end = ""
     try:
         while True:
-            clock_nanosleep_ts(CLOCK_REALTIME, TIMER_ABSTIME, deadline)
+            clock_nanosleep_ts(CLOCK_TAI, TIMER_ABSTIME, deadline)
             st = GPIO.input(PIN)
             i = deadline.tv_nsec // 10_000_000
             if deadline.tv_nsec == 0:
                 print(end=end)
                 end="\n"
                 g = time.gmtime(deadline.tv_sec)
-                print(end=f'{time.strftime("%Y-%m-%d %H:%M:%SZ ", g)}')
+                print(end=f'{time.strftime("%Y-%m-%d %H:%M:%S TAI ", g)}')
                 logfile.timestamp = deadline.tv_sec
             if i in [20, 50, 80]:
                 print(end="|")
