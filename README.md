@@ -15,21 +15,29 @@ Per the datasheet, the MAS618C receiver introduces a phase shift of 50ms
 
 Logfiles are split according to the UTC day, so they consist of filenames like `2021/09-01.txt`.
 
-The log file consists mostly of lines that start by giving the Pi system time
-in UTC `YYYY-mm-dd HH:MM:SS` format, followed by 50 samples of the
+A typical line reads:
+```
+2021-10-13 15:40:59 UTC ____######|###############|###############|##________
+```
+The first fields give the date, time, and timescale, currently UTC.
+
+The time fields are followed by 50 samples of the
 amplitude-modulated signal taken during the second (nominally 20ms apart). Each
 sample is represented by a `_` or a `#`. `#` represents the full-strength
 carrier period and `_` represents the reduced carrier period.
 
-The line also contains "|" symbols which divide the second into
+The line also contains "|" symbols which divide the second into 4 portions:
  * The time when the carrier should always be full-strength
  * The time when the carrier has been reduced for a "0" symbol transmission
  * The time when the carrier has been reduced for a "1" symbol transmission
  * The time when the carrier should always be reduced
 
+A future version may switch from the UTC timescale to the TAI timescale so that
+leap seconds can be correctly observed.  If so, the third field will say "TAI" instead of UTC.
+
 # The upload process
 
-From time to time, the latest logfiles from the in-house device are committed to this git repository.  Intially, the process will be purely manual.
+After each log is rotated away, it is committed to git.  Later, it will automatically be pushed to github.
 
 # Future directions
 
@@ -37,7 +45,7 @@ From time to time, the latest logfiles from the in-house device are committed to
  - Log analysis for anomalies
  - Live view via website
  - Additional receivers
- - Switch to TAI timebase so that leap seconds can be observed(?)
+ - Switch to TAI timebase so that leap seconds can be observed
 
 # License
 
