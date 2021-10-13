@@ -156,3 +156,13 @@ def clock_gettime_ts(clock, buf=None):
 def clock_gettime_ns(clock):
     ts = clock_gettime_ts(clock)
     return ts.tv_sec * NS_IN_S + res.tv_nsec
+
+_clock_settime = libc.clock_settime
+_clock_settime.argtypes = [ctypes.c_int, ctypes.POINTER(timespec)]
+_clock_settime.restype = int
+
+def clock_settime_ts(clock, buf):
+    r = _clock_settime(clock, buf)
+    if r < 0:
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
