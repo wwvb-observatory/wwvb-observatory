@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: WWVB Observatory
+Upstream-Contact: Jeff Epler <jepler@gmail.com>
+Source: https://github.com/jepler/wwvb-observatory
+
+Files: data/*.txt
+Copyright: Public Domain
+License: CC0-1.0

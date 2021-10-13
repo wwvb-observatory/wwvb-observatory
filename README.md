@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Jeff Epler
+
+SPDX-License-Identifier: GPL-3.0-only
+-->
+
 # WWVB Observatory
 
 An archive of WWVB data as received by a low-end receiver at my house
