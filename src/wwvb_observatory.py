@@ -120,8 +120,8 @@ def main():
                 print(end=end)
                 end = "\n"
                 g = time.gmtime(deadline.tv_sec)
-                print(end=f'{time.strftime("%Y-%m-%d %H:%M:%S", g)} {timescale_name} ')
                 logfile.timestamp = deadline.tv_sec
+                print(end=f'{time.strftime("%Y-%m-%d %H:%M:%S", g)} {timescale_name} ')
             if i in [20, 50, 80]:
                 print(end="|")
             print(end="#" if st else "_")
