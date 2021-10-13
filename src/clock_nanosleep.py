@@ -87,6 +87,17 @@ class timex(ctypes.Structure):
         ("errcnt", ctypes.c_long),
         ("stbcnt", ctypes.c_long),
         ("tai", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
+        ("", ctypes.c_int),
     ]
 
 
