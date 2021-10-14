@@ -63,7 +63,9 @@ class DatedFile:
         if filename != self._filename:
             if self._filename is not None:
                 qf = sq(self._filename)
-                os.system(f"(git add {qf} && git commit -m'Add {qf}' {qf})&")
+                os.system(
+                    f"(git add {qf} && git commit --no-verify -m'Add {qf}' {qf})&"
+                )
             self._filename = filename
             if self._file is not None:
                 self._file.close()
