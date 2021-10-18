@@ -109,7 +109,7 @@ def main():
 
     now = clock_gettime_ts(timescale)
     deadline = timespec(now.tv_sec + 1, 0)
-    logfile = DatedFile(deadline.tv_sec, "data/%Y/%m-%d.txt")
+    logfile = DatedFile(deadline.tv_sec, "data/%Y/%m-%d/%H.txt")
     sys.stdout = Tee(sys.stdout, logfile)
 
     end = ""
