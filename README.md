@@ -23,9 +23,9 @@ Logfiles are split according to the UTC date and hour, so they consist of filena
 
 A typical line reads:
 ```
-2021-10-13 15:40:59 UTC ####______|_______________|_______________|__########
+2021-10-13 15:40:59 TAI ####______|_______________|_______________|__########
 ```
-The first fields give the date, time, and timescale, currently UTC.
+The first fields give the date, time, and timescale, currently TAI.
 
 The time fields are followed by 50 samples of the
 amplitude-modulated signal taken during the second (nominally 20ms apart). Each
@@ -41,8 +41,10 @@ The line also contains "|" symbols which divide the second into 4 portions:
  * The time when the carrier is restored for a "1" symbol transmission
  * The time when the carrier is always full-strength
 
-A future version may switch from the UTC timescale to the TAI timescale so that
-leap seconds can be correctly observed.  If so, the third field will say "TAI" instead of UTC.
+Since the TAI timescale technically continues to advance during a leap second,
+the author hopes using it allows leap seconds to be correctly observed.
+However, it is difficult to actually test this.
+
 
 # The upload process
 
@@ -54,7 +56,6 @@ After each log is rotated away, it is committed to git.  Later, it will automati
  - Log analysis for anomalies
  - Live view via website
  - Additional receivers
- - Switch to TAI timebase so that leap seconds can be observed
 
 # License
 

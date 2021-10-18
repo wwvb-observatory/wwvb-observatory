@@ -7,11 +7,13 @@
 
 # pylint: disable=invalid-name,missing-class-docstring,too-few-public-methods,missing-function-docstring,import-error
 # pylint: disable=no-member # pylint incorrectly reports: Instance of 'timespec' has no 'tv_sec' member; maybe 'tv_nsec'?
+import datetime
 import os
 import sys
 import time
+import leapseconddata
 import RPi.GPIO as GPIO
-from clock_nanosleep import (
+from clock_nanosleep import (  # pylint: disable=unused-import
     CLOCK_REALTIME,
     CLOCK_TAI,
     TIMER_ABSTIME,
@@ -81,9 +83,34 @@ class DatedFile:
         return self._file.flush()
 
 
-# timescale = CLOCK_TAI
-timescale = CLOCK_REALTIME
+timescale = CLOCK_TAI
+# timescale = CLOCK_REALTIME
 timescale_name = "TAI" if timescale == CLOCK_TAI else "UTC"
+
+
+def wait_time_stable():
+    """Wait until NTP time and (if needed) TAI offset are stable"""
+    if ntp_adjtime()[0] == TIME_ERROR:
+        print("Waiting for NTP sync", end="", file=sys.stderr)
+        sys.stderr.flush()
+        while ntp_adjtime()[0] == TIME_ERROR:
+            time.sleep(1)
+            print(end=".", file=sys.stderr)
+            sys.stderr.flush()
+        print(file=sys.stderr)
+
+    if timescale == CLOCK_TAI:
+        lsdata = leapseconddata.LeapSecondData.from_standard_source()
+        tai = lsdata.tai_offset(
+            datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        ).total_seconds()
+        print(f"Waiting for TAI sync of {tai} seconds", end="", file=sys.stderr)
+        sys.stderr.flush()
+        while ntp_adjtime()[1].tai != tai:
+            time.sleep(1)
+            print(end=".", file=sys.stderr)
+            sys.stderr.flush()
+        print(file=sys.stderr)
 
 
 def main():
@@ -98,14 +125,7 @@ def main():
         print(f"Setting UID to {sudo_uid}", file=sys.stderr)
         os.setuid(int(os.environ["SUDO_UID"]))
 
-    if ntp_adjtime()[0] == TIME_ERROR:
-        print("Waiting for NTP sync", end="", file=sys.stderr)
-        sys.stderr.flush()
-        while ntp_adjtime()[0] == TIME_ERROR:
-            time.sleep(1)
-            print(end=".", file=sys.stderr)
-            sys.stderr.flush()
-        print(file=sys.stderr)
+    wait_time_stable()
 
     now = clock_gettime_ts(timescale)
     deadline = timespec(now.tv_sec + 1, 0)
