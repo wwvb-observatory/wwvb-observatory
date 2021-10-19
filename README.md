@@ -10,7 +10,7 @@ An archive of WWVB data as received by a low-end receiver at my house
 
 # The receiver
 
-The receiver consists of a Raspberry Pi 4 connected to a [CANADUINO 60kHz Atomic Clock Receiver](https://www.universal-solder.ca/product/canaduino-60khz-atomic-clock-receiver-module-wwvb-msf-jjy60/) with MAS6180C receiver IC.
+The receiver consists of a Raspberry Pi 4 connected to a [CANADUINO 60kHz Atomic Clock Receiver](https://www.universal-solder.ca/product/canaduino-60khz-atomic-clock-receiver-module-wwvb-msf-jjy60/) with MAS6180C receiver IC.  It's located in Lincoln, Nebraska, USA, or around 700km east of the transmitter.
 
 The Pi is reasonably well synchronized to GPS time via NTP.
 
