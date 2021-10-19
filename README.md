@@ -19,7 +19,7 @@ Per the datasheet, the MAS618C receiver introduces a phase shift of 50ms
 
 # The log file
 
-Logfiles are split according to the UTC date and hour, so they consist of filenames like `2021/09-01/01.txt`.
+Logfiles are split according to the TAI date and hour, so they consist of filenames like `2021/09-01/01.txt`.
 
 A typical line reads:
 ```
