@@ -12,7 +12,7 @@ import os
 import sys
 import time
 import leapseconddata
-import RPi.GPIO as GPIO
+import gpiod
 from clock_nanosleep import (  # pylint: disable=unused-import
     CLOCK_REALTIME,
     CLOCK_TAI,
@@ -66,7 +66,7 @@ class DatedFile:
             if self._filename is not None:
                 qf = sq(self._filename)
                 os.system(
-                    f"(git add {qf} && git commit --no-verify -m'Add {qf}' {qf})&"
+                    f"(git add {qf} && git commit --no-verify -m'Add {qf}' {qf} && git push)&"
                 )
             self._filename = filename
             if self._file is not None:
@@ -114,29 +114,29 @@ def wait_time_stable():
 
 
 def main():
-    GPIO.setmode(GPIO.BOARD)
-    PIN = 3
-    GPIO.setup([PIN], GPIO.IN)
+    with gpiod.Chip("gpiochip0") as chip:
+        line = chip.get_line(2)
+        line.request(consumer=sys.argv[0], type=gpiod.LINE_REQ_DIR_IN)
+        line.get_value()  # fail early if it's not gonna work
 
-    if sudo_gid := os.environ.get("SUDO_GID"):
-        print(f"Setting GID to {sudo_gid}", file=sys.stderr)
-        os.setgid(int(os.environ["SUDO_GID"]))
-    if sudo_uid := os.environ.get("SUDO_UID"):
-        print(f"Setting UID to {sudo_uid}", file=sys.stderr)
-        os.setuid(int(os.environ["SUDO_UID"]))
+        if sudo_gid := os.environ.get("SUDO_GID"):
+            print(f"Setting GID to {sudo_gid}", file=sys.stderr)
+            os.setgid(int(os.environ["SUDO_GID"]))
+        if sudo_uid := os.environ.get("SUDO_UID"):
+            print(f"Setting UID to {sudo_uid}", file=sys.stderr)
+            os.setuid(int(os.environ["SUDO_UID"]))
 
-    wait_time_stable()
+        wait_time_stable()
 
-    now = clock_gettime_ts(timescale)
-    deadline = timespec(now.tv_sec + 1, 0)
-    logfile = DatedFile(deadline.tv_sec, "data/%Y/%m-%d/%H.txt")
-    sys.stdout = Tee(sys.stdout, logfile)
+        now = clock_gettime_ts(timescale)
+        deadline = timespec(now.tv_sec + 1, 0)
+        logfile = DatedFile(deadline.tv_sec, "data/%Y/%m-%d/%H.txt")
+        sys.stdout = Tee(sys.stdout, logfile)
 
-    end = ""
-    try:
+        end = ""
         while True:
             clock_nanosleep_ts(timescale, TIMER_ABSTIME, deadline)
-            st = GPIO.input(PIN)
+            st = line.get_value()
             i = deadline.tv_nsec // 10_000_000
             if deadline.tv_nsec == 0:
                 print(end=end)
@@ -152,8 +152,6 @@ def main():
             if deadline.tv_nsec >= 1_000_000_000:
                 deadline.tv_nsec -= 1_000_000_000
                 deadline.tv_sec += 1
-    finally:
-        GPIO.cleanup()
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-only
 
+setenv SHELL /bin/bash
+
 source ~/.screenrc
 
 unsetenv DISPLAY
@@ -9,4 +11,4 @@ unsetenv SESSION_MANAGER
 
 zombie xa
 
-screen sh -c 'sudo env HOME="$HOME" ./src/wwvb_observatory.py'
+screen ./src/wwvb_observatory.py
