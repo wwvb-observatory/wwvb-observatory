@@ -35,7 +35,7 @@ carrier period and `_` represents the reduced carrier period.
 The period of full-strength carrier shown at the start of the second is an
 artifact of the phase shift introduced by the MAS618C receiver.
 
-The line also contains "|" symbols which divide the second into 4 portions:
+The line also contains "|" symbols which divide the second into 4 portions according to the nominal WWVB bit framing:
  * The time when the carrier is always reduced
  * The time when the carrier is restored for a "0" symbol transmission
  * The time when the carrier is restored for a "1" symbol transmission
