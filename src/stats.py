@@ -1,3 +1,4 @@
+from concurrent.futures.process import ProcessPoolExecutor
 import datetime
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
@@ -5,6 +6,7 @@ from typing import List
 from itertools import count
 
 import click
+from tqdm import tqdm
 from leapseconddata import LeapSecondData, tai
 from wwvb import WWVBMinuteIERS
 
@@ -14,6 +16,7 @@ ls = LeapSecondData.from_standard_source()
 @lru_cache(1440)
 def am_from_datetime(observation_time):
     return WWVBMinuteIERS.from_datetime(observation_time).as_timecode().am
+
 
 def reference_minute(observation_time):
     if observation_time.tzinfo is None:
@@ -37,9 +40,9 @@ class WWVBObservationSecond:
     def __repr__(self):
         mismatch = "" if self.matches_reference else "!={+self.reference}"
         return (
-                f"<{self.tai_time:%Y-%m-%d %H:%M:%S} TAI "
-                f"{self.symbol}{mismatch} "
-                f"Q{self.quality}>"
+            f"<{self.tai_time:%Y-%m-%d %H:%M:%S} TAI "
+            f"{self.symbol}{mismatch} "
+            f"Q{self.quality}>"
         )
 
     @classmethod
@@ -110,7 +113,13 @@ class WWVBObservationLog:
 
     @classmethod
     def from_file(cls, f):
-        return WWVBObservationLog([WWVBObservationSecond.from_string(row) for row in f])
+        return WWVBObservationLog(
+            [
+                observation
+                for row in f
+                if (observation := WWVBObservationSecond.from_string(row))
+            ]
+        )
 
     @classmethod
     def from_filename(cls, filename):
@@ -140,19 +149,32 @@ class WWVBObservationLog:
     def quality(self):
         return sum(m.quality for m in self) / len(self.observations)
 
+def process(filename):
+    stats = WWVBObservationLog.from_filename(filename)
+    if not stats.observations:
+        return filename, None
+    else:
+        return filename, (stats.observations[0].tai_time, len(stats.observations), stats.mismatches, stats.quality)
+
 @click.command()
 @click.option("--verbose", "-v", type=bool, default=False)
 @click.argument("files", type=click.Path(exists=True), nargs=-1)
 def main(verbose, files):
-    for infile in files:
-        log = WWVBObservationLog.from_filename(infile)
-        if not log.observations:
+    pool = ProcessPoolExecutor()
+    for filename, data in tqdm(pool.map(process, files), total=len(files)):
+        if not data:
             print(f"{infile} contains no observations", file=stderr)
-        elif verbose:
-            print(f"{infile}:0: total errors {log.mismatches} overall quality {log.quality:.1f}")
         else:
-            o = log.observations[0]
-            print(f"{o.tai_time:%Y-%m-%d %H:%M:%S} TAI {len(log.observations)} {log.mismatches/len(log.observations)*100:.1f} {log.quality:.1f}")
+            tai_time, n_obs, n_mis, q = data
+            if verbose:
+                print(
+                    f"{infile}:0: {n_mis} in {n_obs} observations ({n_mis*100/n_obs:.1f}%) overall quality {q:.1f}"
+                )
+            else:
+                print(
+                    f"{tai_time:%Y-%m-%d %H:%M:%S} TAI {n_obs} {n_mis*100/n_obs:.1f} {q:.1f}"
+                )
+
 
 if __name__ == "__main__":
     main()
